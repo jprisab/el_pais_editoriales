@@ -6,6 +6,7 @@ import time
 
 INIT = "http://elpais.com/tag/c/aac32d0cdce5eeb99b187a446e57a9f7"
 
+
 def process_editorial_list(url):
     """
     Process a page that contains a list of editorials.
@@ -18,25 +19,31 @@ def process_editorial_list(url):
     content.close()
     next_edlist = get_next_edlist(tree)
     artlist = get_edarticles(tree)
-    
+
     return (artlist, next_edlist)
+
 
 def get_next_edlist(tree):
     """
     Returns the URL for the next editorial page
     """
-    next_edlist = tree.xpath(u'//a[@title="' + "Página siguiente".decode("utf8") + '"]/@href')
-    next_edlist = "http://www.elpais.com" + next_edlist[0]
-    return(next_edlist)
+#    next_edlist = tree.xpath(u'//a[@title="' + "Página siguiente".decode("utf8") + '"]/@href')
+#    next_edlist = "http://www.elpais.com" + next_edlist[0]
+    next_edlist = tree.xpath('//li[@class="paginacion-siguiente"]/a[1]/@href')[0]
+    return (next_edlist)
+
 
 def get_edarticles(tree):
     """
     Returns a list with the URLs of the editorial articles
     from a page containing a list of editorials.
     """
-    artlist = tree.xpath('//div[@class="columna_principal"]//h2/a[@title="Ver noticia"]/@href')
-    return(artlist)
-    
+    #artlist = tree.xpath('//div[@class="columna_principal"]//h2/a[@title="Ver noticia"]/@href')
+
+    artlist = tree.xpath('//h2[@class="articulo-titulo" and @itemprop="headline"]/a[1]/@href')
+    return (artlist)
+
+
 def get_article_info(url):
     """
     Returns a dictionary with the article info.
@@ -55,8 +62,9 @@ def get_article_info(url):
     url = url
 
     result = {'date': date, 'title': title, 'tags': tags, 'url': url}
-    return(result)    
-    
+    return (result)
+
+
 if __name__ == "__main__":
     """
     Starting from the first editorial page, retrieve the information
@@ -69,13 +77,13 @@ if __name__ == "__main__":
     while next_edlist and next_edlist.find('void') == -1:
         partial = []
         artlist, next_edlist = process_editorial_list(next_edlist)
+        print(info)
         for article in artlist:
-            time.sleep(0.5)
+            #time.sleep(0.5)
             info = get_article_info(article)
             print(info)
             partial.append(info)
         # Save partial individually
         with open("elpais_opeds_%03d.json" % n, "a") as f:
             json.dump(partial, f)
-        n += 1
-        
+n += 1
